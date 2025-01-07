@@ -1,0 +1,122 @@
+C51 COMPILER V9.60.7.0   LCD_1602                                                          12/06/2024 22:55:40 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LCD_1602
+OBJECT MODULE PLACED IN .\Objects\LCD_1602.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE 00_Library\LCD_1602.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listin
+                    -gs\LCD_1602.lst) TABS(2) OBJECT(.\Objects\LCD_1602.obj)
+
+line level    source
+
+   1          #include <00_Library\main.h>
+   2          #include <00_Library\LCD_1602.h>
+   3          #include <00_Library\Delay.h>
+   4          
+   5          sbit LCD_RS = P2^6; //Naming the led pin P0.0
+   6          sbit LCD_EN = P2^7;
+   7          sbit LCD_RW = P2^5;
+   8          
+   9          #define LCD_DATA P0
+  10          
+  11          void Lcd_Cmd(char cmd)
+  12          {
+  13   1          LCD_RS = 0;
+  14   1          LCD_DATA = cmd;
+  15   1          LCD_EN = 0;
+  16   1          LCD_EN = 1;
+  17   1          if (cmd <= 0x02)
+  18   1          {
+  19   2              Delay_ms(2);
+  20   2          }
+  21   1          else
+  22   1          {
+  23   2              Delay_ms(1);
+  24   2          }
+  25   1      }
+  26          
+  27          void Lcd_Chr_Cp(char c) //Current Position
+  28          {
+  29   1          LCD_RS = 1;
+  30   1          LCD_DATA = c;
+  31   1          LCD_EN = 0;
+  32   1          LCD_EN = 1;
+  33   1          Delay_ms(1);
+  34   1      }
+  35          
+  36          //Display a letter at row, col
+  37          void Lcd_Chr(unsigned char row, unsigned char col, char c)
+  38          {
+  39   1          char cmd;
+  40   1          //Move pointer to the position
+  41   1          cmd = (row == 1? 0x80:0xC0) + col - 1;
+  42   1      //    if (row == 1)
+  43   1      //    {
+  44   1      //      cmd = 0x80 + col - 1;
+  45   1      //    }
+  46   1      //    else
+  47   1      //    {
+  48   1      //      cmd = 0xC0 + col - 1;
+  49   1      //    }
+  50   1          
+  51   1          Lcd_Cmd(cmd);
+  52   1          
+  53   1          //Display a letter
+  54   1          Lcd_Chr_Cp(c);
+C51 COMPILER V9.60.7.0   LCD_1602                                                          12/06/2024 22:55:40 PAGE 2   
+
+  55   1      }
+  56          
+  57          void Lcd_out_Cp(char *str)
+  58          {
+  59   1          char i = 0;
+  60   1          while (str[i] != 0)
+  61   1          {
+  62   2              Lcd_Chr_Cp(str[i]);
+  63   2              i++;
+  64   2          }
+  65   1      }
+  66          
+  67          void Lcd_out(unsigned char row, unsigned char col, char *str)
+  68          {
+  69   1          char cmd;
+  70   1          
+  71   1          //Move pointer to the position
+  72   1          cmd = (row == 1? 0x80:0xC0) + col - 1;
+  73   1          
+  74   1          Lcd_Cmd(cmd);
+  75   1          
+  76   1          //Display a word
+  77   1          Lcd_out_Cp(str);
+  78   1      }
+  79          
+  80          void Lcd_Init()
+  81          {
+  82   1          Lcd_Cmd(0x30);
+  83   1          Delay_ms(5);
+  84   1          Lcd_Cmd(0x30);
+  85   1          Delay_ms(1);
+  86   1          Lcd_Cmd(0x30);
+  87   1          
+  88   1          Lcd_Cmd(0x38); //So dong hien thi la 2, font 5x8;
+  89   1          
+  90   1          Lcd_Cmd(0x01);
+  91   1          Lcd_Cmd(0x0C);
+  92   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    180    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       8
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

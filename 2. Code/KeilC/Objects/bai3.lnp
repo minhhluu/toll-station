@@ -1,0 +1,8 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\Delay.obj",
+".\Objects\LCD_1602.obj",
+".\Objects\UART_Mode_1.obj" 
+TO ".\Objects\bai3" 
+
+PRINT(".\Listings\bai3.map") ru 

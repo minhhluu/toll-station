@@ -1,0 +1,277 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              12/17/2024 19:57:00 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listings\main.lst) TA
+                    -BS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <00_Library\main.h>
+   2          #include <00_Library\Delay.h>
+   3          #include <00_Library\UART_Mode_1.h>
+   4          #include <00_Library\LCD_1602.h>
+   5          
+   6          //Naming the led pin P2
+   7          sbit LCD_RS = P2^6; 
+   8          sbit LCD_EN = P2^7;
+   9          sbit LCD_RW = P2^5;
+  10          
+  11          #define LCD_DATA P0
+  12          
+  13          sbit PWM_Pin = P2^0;
+  14          
+  15          unsigned int T, Ton, Toff;
+  16          unsigned char Ton_H_Reload, Ton_L_Reload, Toff_H_Reload, Toff_L_Reload;
+  17          
+  18          // cycle (unit - us)
+  19          void PWM_Init(unsigned int cycle)
+  20          {
+  21   1          PWM_Pin = 1;
+  22   1          
+  23   1          TMOD &= 0xF0;       // Xoa di cac bit chon mode cua Timer0
+  24   1          TMOD |= 0x01;       // Timer0 hoat dong o mode 1
+  25   1          
+  26   1          ET0 = 1;            // Cho phep ngat Timer0
+  27   1          EA = 1;             // Cho phep ngat toan cuc
+  28   1          
+  29   1          T = cycle;
+  30   1          
+  31   1          Ton = T/2;          // Duty  cycle = 50%
+  32   1          Toff = T - Ton;
+  33   1          
+  34   1          Ton_H_Reload = (65536-Ton)>>8;
+  35   1          Ton_L_Reload = (65536-Ton)&0x00FF;
+  36   1          
+  37   1          Toff_H_Reload = (65536-Toff)>>8;
+  38   1          Toff_L_Reload = (65536-Toff)&0x00FF;
+  39   1          
+  40   1          TH0 = Ton_H_Reload;
+  41   1          TL0 = Ton_L_Reload;
+  42   1      }
+  43          
+  44          void PWM_Start()
+  45          {
+  46   1          TR0 = 1;            // Timer0 bat dau dem
+  47   1      }
+  48          
+  49          void PWM_Stop()
+  50          {
+  51   1          TR0 = 0;
+  52   1      }
+  53          
+  54          // Duty cycle tu 0 den 100%
+C51 COMPILER V9.60.7.0   MAIN                                                              12/17/2024 19:57:00 PAGE 2   
+
+  55          void PWM_Set_Duty(unsigned char duty)
+  56          {
+  57   1          if (duty == 0)
+  58   1          {
+  59   2              PWM_Pin = 0;
+  60   2              ET0 = 0;
+  61   2          }
+  62   1          else if (duty == 100)
+  63   1          {
+  64   2              PWM_Pin = 1;
+  65   2              ET0 = 0;
+  66   2          }
+  67   1          else
+  68   1          {
+  69   2              Ton = ((unsigned long)T)*duty/100;
+  70   2              Toff = T - Ton;
+  71   2          
+  72   2              Ton_H_Reload = (65536-Ton)>>8;
+  73   2              Ton_L_Reload = (65536-Ton)&0x00FF;
+  74   2          
+  75   2              Toff_H_Reload = (65536-Toff)>>8;
+  76   2              Toff_L_Reload = (65536-Toff)&0x00FF;
+  77   2              
+  78   2              ET0 = 1;
+  79   2          }
+  80   1      }
+  81          
+  82          void main()
+  83          {
+  84   1          unsigned int a = 0, b;
+  85   1          char t[16] = {' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '};
+  86   1          char character[26] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t',
+             -'u','v','w','x','y','z'};
+  87   1          char i, j;
+  88   1          char *messages[] = {"Vehicle 1       ", "Vehicle 2       ", "Vehicle 3       ", "Vehicle 4       ", "Acc
+             -ess denied   "};
+  89   1          int temp = 1;
+  90   1          int cnt_motor = 0;
+  91   1          
+  92   1          //PWM_Init(1000);     // T = 1000us = 1ms
+  93   1      
+  94   1          
+  95   1          // LCD Display
+  96   1          LCD_RW = 0;
+  97   1          Lcd_Init();
+  98   1          Lcd_out(1,1, "RFID is: ");
+  99   1          
+ 100   1         
+ 101   1          //P1 = 0x0C;
+ 102   1          P2_0 = 1;
+ 103   1          P2_1 = 1;
+ 104   1          
+ 105   1          P1 |= 0x03;
+ 106   1          
+ 107   1      
+ 108   1          while (1){
+ 109   2      ////////////////////////////////////////////////////////////////////////////////////////////////
+ 110   2            if (temp == 0){
+ 111   3                Lcd_out(1,1, "RFID is:        ");
+ 112   3                Lcd_out(2,1, "                ");
+ 113   3                temp = 1;
+ 114   3            }   
+C51 COMPILER V9.60.7.0   MAIN                                                              12/17/2024 19:57:00 PAGE 3   
+
+ 115   2            if (temp == 1){
+ 116   3                
+ 117   3                  if (P1_0 == 0) 
+ 118   3                  {
+ 119   4                    temp = 2;
+ 120   4                    //Lcd_out(2,1, "Vehicle Detected");
+ 121   4                  } 
+ 122   3                } else if (temp == 2){
+ 123   3                  
+ 124   3                // Khoi tao UART o che do 1, 9600 baud, 1 start, 8-bit du lieu, 1 bit stop
+ 125   3                LCD_RW = 0;
+ 126   3                Lcd_Init();
+ 127   3                UART_Init();
+ 128   3                temp = 3;
+ 129   3                Delay_ms(100);
+ 130   3                Lcd_out(1,1, "Vehicle Detected");
+ 131   3                Lcd_out(2,1, "Your card, pls  ");
+ 132   3                Delay_ms(100);
+ 133   3                
+ 134   3                
+ 135   3                } else if (temp == 3){
+ 136   3                  //Lcd_out(2,1, "RFID co 3 ");
+ 137   3                    
+ 138   3                  if (UART_Data_Ready()) {
+ 139   4                  i = UART_Read();
+ 140   4              
+ 141   4              // Validate character
+ 142   4              if ((i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || 
+ 143   4                  (i >= '0' && i <= '9') || i == ' ') {
+ 144   5                  t[a++] = i; // Store and increment index
+ 145   5              }
+ 146   4      
+ 147   4              // When two characters are captured (bien dem, dem len tu 2 lan tro len, bit 1 la ki tu trong)
+ 148   4              if (a >= 2) {
+ 149   5                  if (t[1] >= '1' && t[1] <= '4') {
+ 150   6                      Lcd_out(2, 1, messages[t[1] - '1']);
+ 151   6                      temp = 4;
+ 152   6                  } else {
+ 153   6                      Lcd_out(2, 1, messages[4]); // Default message (access denied)
+ 154   6                      Delay_ms(3000);
+ 155   6                      temp = 0;
+ 156   6                  }
+ 157   5                    a = 0; // Reset index
+ 158   5                  }
+ 159   4                }
+ 160   3                  
+ 161   3                } else if (temp ==4){
+ 162   3                      Delay_ms(2000);
+ 163   3                      PWM_Init(20000);     // T = 20000us = 20ms
+ 164   3                      PWM_Set_Duty(0);
+ 165   3                      PWM_Start();
+ 166   3                        
+ 167   3                      Delay_ms(1000);
+ 168   3                      Lcd_Cmd(0x01);
+ 169   3                      Lcd_out(2,1, "You may pass    ");
+ 170   3      
+ 171   3                    
+ 172   3                      // open the barrier
+ 173   3                      PWM_Set_Duty(5);
+ 174   3                      Delay_ms(3000);
+ 175   3                      temp = 5;
+ 176   3                  
+C51 COMPILER V9.60.7.0   MAIN                                                              12/17/2024 19:57:00 PAGE 4   
+
+ 177   3                } else if (temp == 5){
+ 178   3                    //close the barrier
+ 179   3                    if (P1_1 == 0)
+ 180   3                    {
+ 181   4                      PWM_Set_Duty(10);
+ 182   4                      Delay_ms(3000);
+ 183   4                      temp = 6;
+ 184   4                      EA = 0;
+ 185   4                  }
+ 186   3                      Delay_ms(100);
+ 187   3                      Lcd_out(2,1, "Waiting...      ");
+ 188   3                            
+ 189   3                } else if (temp == 6){
+ 190   3                  //write Uart
+ 191   3                    LCD_RW = 0;
+ 192   3                    Lcd_Init();
+ 193   3                    UART_Init();
+ 194   3                    temp = 7;
+ 195   3                    Delay_ms(100);
+ 196   3      
+ 197   3              
+ 198   3              } else if (temp == 7){
+ 199   3                    UART_Write(t[1]);
+ 200   3                    if (UART_Data_Ready()) {
+ 201   4                        j = UART_Read();
+ 202   4                        if (j == 'a'){
+ 203   5                            Lcd_out(2,1, "Sending data... ");
+ 204   5                            temp = 8;
+ 205   5                            SBUF = 0;
+ 206   5                            Delay_ms(2000);
+ 207   5                          } 
+ 208   4                      }   
+ 209   3                } else if (temp == 8){
+ 210   3                    UART_Write('b');
+ 211   3                      if (UART_Data_Ready()) {
+ 212   4                        j = UART_Read();
+ 213   4                        if (j == 'c'){
+ 214   5                            temp = 0;
+ 215   5                            Lcd_out(1,1, "Data sent       ");
+ 216   5                            Lcd_out(2,1,"successfully!   ");
+ 217   5                            Delay_ms(3000);
+ 218   5                          } 
+ 219   4                }
+ 220   3            }
+ 221   2        }
+ 222   1      }
+*** WARNING C280 IN LINE 84 OF main.c: 'b': unreferenced local variable
+ 223          
+ 224          void T0_Overflow() interrupt 1
+ 225          {
+ 226   1          PWM_Pin = !PWM_Pin;
+ 227   1          if (PWM_Pin == 0)
+ 228   1          {
+ 229   2              TH0 = Toff_H_Reload;
+ 230   2              TL0 = Toff_L_Reload;
+ 231   2          }
+ 232   1          else
+ 233   1          {
+ 234   2              TH0 = Ton_H_Reload;
+ 235   2              TL0 = Ton_L_Reload;
+ 236   2          }
+ 237   1              
+C51 COMPILER V9.60.7.0   MAIN                                                              12/17/2024 19:57:00 PAGE 5   
+
+ 238   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    956    ----
+   CONSTANT SIZE    =    305    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10      66
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
